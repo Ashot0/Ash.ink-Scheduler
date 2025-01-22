@@ -7,13 +7,13 @@ dotenv.config();
 const pinterestToken = process.env.PINTEREST_TOKEN;
 const telegramBotToken = process.env.TELEGRAM_TOKEN;
 const channelId = process.env.CHANNEL_ID;
+const username = process.env.USERNAME;
 
 let sentPins = new Set();
 
 // Функция для получения пинов пользователя
 async function fetchPins() {
 	console.log('Запрос пинов от пользователя...');
-	const username = 'Ararararararat'; // Имя пользователя
 	const url = `https://api.pinterest.com/v5/users/${username}/pins`;
 	try {
 		const response = await axios.get(url, {
