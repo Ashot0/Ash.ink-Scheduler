@@ -8,7 +8,7 @@ const pinterestToken = process.env.PINTEREST_TOKEN;
 const telegramBotToken = process.env.TELEGRAM_TOKEN;
 const channelId = process.env.CHANNEL_ID;
 const username = process.env.USERNAME;
-
+const scheduleInterval = process.env.SCHEDULE_INTERVAL;
 let sentPins = new Set();
 
 // Функция для получения пинов пользователя
@@ -77,3 +77,5 @@ schedule.scheduleJob('0 * * * *', async () => {
 });
 
 console.log('Скрипт запущен. Ожидаем выполнения задачи...');
+// test
+processPins();
