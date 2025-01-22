@@ -1,0 +1,13 @@
+{
+  "name": "pinterest-to-telegram",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "node-schedule": "^2.1.1",
+    "dotenv": "^16.4.7"
+  }
+}
