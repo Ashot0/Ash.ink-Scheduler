@@ -73,4 +73,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue on the [GitHub repository](https://github.com/Ashot0/Ash.ink-Scheduler) or contact us at support@ashink.example.com.
+If you encounter any issues or have questions, please open an issue on the [GitHub repository](https://github.com/Ashot0/Ash.ink-Scheduler)
