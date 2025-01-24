@@ -1,3 +1,4 @@
+import http from 'http';
 import axios from 'axios';
 import schedule from 'node-schedule';
 import dotenv from 'dotenv';
@@ -17,6 +18,16 @@ if (fs.existsSync(sentPinsFile)) {
 	const data = fs.readFileSync(sentPinsFile, 'utf-8');
 	sentPins = new Set(JSON.parse(data));
 }
+
+const server = http.createServer((req, res) => {
+	res.writeHead(200, { 'Content-Type': 'text/plain' });
+	res.end('App is running');
+});
+const port = process.env.PORT || 10000;
+
+server.listen(port, () => {
+	console.log(`Server is running on port ${port}`);
+});
 
 /**
  * Board list request function
