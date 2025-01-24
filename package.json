@@ -6,9 +6,10 @@
 		"start": "node app.js"
 	},
 	"dependencies": {
-		"pm2": "^5.1.0",
 		"axios": "^1.7.9",
+		"dotenv": "^16.4.7",
+		"express": "^4.21.2",
 		"node-schedule": "^2.1.1",
-		"dotenv": "^16.4.7"
+		"pm2": "^5.1.0"
 	}
 }
