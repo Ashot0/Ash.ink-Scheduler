@@ -19,16 +19,18 @@ if (fs.existsSync(sentPinsFile)) {
 	sentPins = new Set(JSON.parse(data));
 }
 
-const server = http.createServer((req, res) => {
-	res.writeHead(200, { 'Content-Type': 'text/plain' });
-	res.end('App is running');
-});
-const port = process.env.PORT || 10000;
+const express = require('express');
+const app = express();
 
-server.listen(port, () => {
+const port = 3000;
+
+app.get('/', (req, res) => {
+	res.send('App is running');
+});
+
+app.listen(port, () => {
 	console.log(`Server is running on port ${port}`);
 });
-
 /**
  * Board list request function
  */

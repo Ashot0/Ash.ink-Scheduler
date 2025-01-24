@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"start": "pm2 start app.js --name Ash-ink"
+		"start": "node app.js"
 	},
 	"dependencies": {
 		"pm2": "^5.1.0",
