@@ -3,7 +3,6 @@ import axios from 'axios';
 import schedule from 'node-schedule';
 import dotenv from 'dotenv';
 import Database from 'better-sqlite3';
-
 dotenv.config();
 
 // Environment variables
@@ -11,9 +10,10 @@ const pinterestToken = process.env.PINTEREST_TOKEN;
 const telegramBotToken = process.env.TELEGRAM_TOKEN;
 const channelId = process.env.CHANNEL_ID;
 const scheduleInterval = process.env.SCHEDULE_INTERVAL || '0 * * * *'; // Default: once an hour
+const dbPath = process.env.DATABASE_PATH || 'pins.db';
 
 // SQLite database setup
-const db = new Database('pins.db');
+const db = new Database(dbPath);
 db.exec(`
   CREATE TABLE IF NOT EXISTS sent_pins (
     id TEXT PRIMARY KEY, 
