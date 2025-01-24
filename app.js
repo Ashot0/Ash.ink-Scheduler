@@ -8,10 +8,10 @@ dotenv.config();
 const pinterestToken = process.env.PINTEREST_TOKEN;
 const telegramBotToken = process.env.TELEGRAM_TOKEN;
 const channelId = process.env.CHANNEL_ID;
-const scheduleInterval = process.env.SCHEDULE_INTERVAL || '0 * * * *'; // По умолчанию раз в час
+const scheduleInterval = process.env.SCHEDULE_INTERVAL || '0 * * * *'; //Default once per hour
 const sentPinsFile = './sentPins.json';
 
-// Загрузка списка уже отправленных пинов из файла
+// Loading a list of already sent pins from a file
 let sentPins = new Set();
 if (fs.existsSync(sentPinsFile)) {
 	const data = fs.readFileSync(sentPinsFile, 'utf-8');
@@ -19,7 +19,7 @@ if (fs.existsSync(sentPinsFile)) {
 }
 
 /**
- * Функция запроса списка досок
+ * Board list request function
  */
 async function fetchBoards() {
 	const url = `https://api.pinterest.com/v5/boards`;
@@ -28,12 +28,12 @@ async function fetchBoards() {
 		const response = await axios.get(url, {
 			headers: { Authorization: `Bearer ${pinterestToken}` },
 		});
-		console.log('Список досок:', response.data.items);
+		console.log('List of boards:', response.data.items);
 
 		return response.data.items || [];
 	} catch (error) {
 		console.error(
-			'Ошибка при запросе досок:',
+			'Error when requesting boards:',
 			error.response?.data || error.message
 		);
 
@@ -42,7 +42,7 @@ async function fetchBoards() {
 }
 
 /**
- * Функция запроса пинов с указанной доски
+ * Function to request pins from a specified board
  */
 async function fetchPinsFromBoard(boardId) {
 	const url = `https://api.pinterest.com/v5/boards/${boardId}/pins`;
@@ -51,11 +51,11 @@ async function fetchPinsFromBoard(boardId) {
 		const response = await axios.get(url, {
 			headers: { Authorization: `Bearer ${pinterestToken}` },
 		});
-		console.log(`Пины доски ${boardId}:`, response.data.items);
+		console.log(`Board Pins ${boardId}:`, response.data.items);
 		return response.data.items || [];
 	} catch (error) {
 		console.error(
-			`Ошибка при запросе пинов доски ${boardId}:`,
+			`Error when requesting board pins ${boardId}:`,
 			error.response?.data || error.message
 		);
 
@@ -64,7 +64,7 @@ async function fetchPinsFromBoard(boardId) {
 }
 
 /**
- * Поиск изображения с максимальным разрешением
+ * Search for an image with maximum resolution
  */
 function findHighestResolutionImage(images) {
 	let highestResolution = null;
@@ -83,7 +83,7 @@ function findHighestResolutionImage(images) {
 }
 
 /**
- * Отправка изображения в Telegram
+ * Sending an image to Telegram
  */
 async function sendToTelegram(imageUrl, caption) {
 	const url = `https://api.telegram.org/bot${telegramBotToken}/sendPhoto`;
@@ -92,15 +92,15 @@ async function sendToTelegram(imageUrl, caption) {
 		const response = await axios.post(url, {
 			chat_id: channelId,
 			photo: imageUrl,
-			// Это подпись под изображением при необходимости раскомментировать
+			// This description is under the image if necessary, uncomment
 			// caption: caption || '',
 		});
-		console.log('Успешно отправлено в Telegram:', response.data);
+		console.log('Successfully sent to Telegram:', response.data);
 
 		return true;
 	} catch (error) {
 		console.error(
-			'Ошибка отправки в Telegram:',
+			'Error sending to Telegram:',
 			error.response?.data || error.message
 		);
 
@@ -109,75 +109,71 @@ async function sendToTelegram(imageUrl, caption) {
 }
 
 /**
- * Сохранение отправленных пинов в файл
+ * Saving sent pins to a file
  */
 function saveSentPins() {
 	fs.writeFileSync(sentPinsFile, JSON.stringify([...sentPins]));
 }
 
 /**
- * Проверка и обработка пинов (с отправкой только одного пина)
+ * Validation and processing of pins (with only one pin sent)
  */
 async function processPins() {
-	console.log('Запрос списка досок...');
+	console.log('Request a list of boards...');
 	const boards = await fetchBoards();
 
 	if (!boards.length) {
-		console.log('Нет доступных досок.');
+		console.log('No boards available.');
 		return;
 	}
 
-	// Перебираем доски, но отправляем только один пин с каждой
+	// We go through the boards, but only send one pin from each
 	for (const board of boards) {
-		console.log(`Запрос пинов из доски: ${board.name} (${board.id})`);
+		console.log(`Request Pins from a Board: ${board.name} (${board.id})`);
 		const pins = await fetchPinsFromBoard(board.id);
 
 		for (const pin of pins) {
-			// Проверяем, обрабатывался ли уже пин
+			// Checking whether the pin has already been processed
 			if (sentPins.has(pin.id)) {
-				console.log(`Пин ${pin.id} уже был отправлен.`);
+				console.log(`Pin ${pin.id} has already been sent.`);
 				continue;
 			}
 
-			// Проверяем наличие изображения
+			// Checking for the presence of an image
 			const imageUrl = findHighestResolutionImage(pin.media?.images || {});
 			if (!imageUrl) {
-				console.log(
-					`Нет доступного изображения для пина ${pin.id}: ${JSON.stringify(
-						pin
-					)}`
-				);
+				console.log(`No pin image available ${pin.id}: ${JSON.stringify(pin)}`);
 				continue;
 			}
 
-			// Пытаемся отправить изображение в Telegram
-			const success = await sendToTelegram(imageUrl, pin.title || ''); // Отправляем с заголовком, если есть
+			// Trying to send an image to Telegram
+			const success = await sendToTelegram(imageUrl, pin.title || ''); // Send with header, if available.
 			if (success) {
-				sentPins.add(pin.id); // Добавляем ID пина в список отправленных
-				saveSentPins(); // Сохраняем список отправленных пинов
-				return; // Выход из функции после отправки одного пина
+				sentPins.add(pin.id); // Add the pin ID to the sent list
+				saveSentPins(); // Save a list of sent pins
+				return; // Exiting the function after sending one pin
 			} else {
-				console.log(`Не удалось отправить пин ${pin.id}.`);
+				console.log(`Failed to send pin ${pin.id}.`);
 			}
 		}
 	}
 }
 
 /**
- * Запланированная задача
+ * Scheduled task
  */
 schedule.scheduleJob(scheduleInterval, async () => {
-	console.log('Запуск запланированной задачи...');
+	console.log('Run a scheduled task...');
 	await processPins();
 });
 
 /**
- * Тестовый запуск при старте (отправка одного пина)
+ * Test run at startup (sending one pin)
  */
 (async () => {
-	console.log('Инициализация...');
+	console.log('Initialization...');
 	if (!pinterestToken || !telegramBotToken || !channelId) {
-		console.error('Отсутствуют обязательные переменные окружения.');
+		console.error('Required environment variables are missing.');
 		process.exit(1);
 	}
 	await processPins();
