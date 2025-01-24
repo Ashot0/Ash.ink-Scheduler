@@ -39,9 +39,9 @@ Create a `.env` file in the root directory and populate it with the following:
 ```env
 PINTEREST_TOKEN=your_pinterest_access_token
 TELEGRAM_TOKEN=your_telegram_bot_token
-CHANNEL_ID=@your_channel_id
-USERNAME=pinterest_username
-SCHEDULE_INTERVAL=3600000  # Interval in milliseconds (e.g., 3600000 for 1 hour)
+CHANNEL_ID=your_telegram_channel_id
+USERNAME_PINTEREST=pinterest_user_id
+SCHEDULE_INTERVAL=0 * * * *    # minute/hour/day of month/month/day of week
 ```
 
 ### 4. Run the Application
