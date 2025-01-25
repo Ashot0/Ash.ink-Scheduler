@@ -1,4 +1,3 @@
-import express from 'express';
 import axios from 'axios';
 import schedule from 'node-schedule';
 import dotenv from 'dotenv';
@@ -18,17 +17,7 @@ if (fs.existsSync(sentPinsFile)) {
 	const data = fs.readFileSync(sentPinsFile, 'utf-8');
 	sentPins = new Set(JSON.parse(data));
 }
-const app = express();
 
-const port = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-	res.send('App is running');
-});
-
-app.listen(port, () => {
-	console.log(`Server is running on port ${port}`);
-});
 /**
  * Board list request function
  */
