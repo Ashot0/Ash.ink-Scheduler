@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"start": "pm2 start pm2.config.js",
+		"start": "pm2 start ./pm2.config.js --config",
 		"restart": "pm2 restart pinterest-bot",
 		"stop": "pm2 stop pinterest-bot",
 		"delete": "pm2 delete pinterest-bot"
