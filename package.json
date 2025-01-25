@@ -3,11 +3,13 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"start": "node app.js"
+		"start": "pm2 start app.js --name pinterest-bot --watch --max-memory-restart 480M",
+		"restart": "pm2 restart pinterest-bot",
+		"stop": "pm2 stop pinterest-bot",
+		"delete": "pm2 delete pinterest-bot"
 	},
 	"dependencies": {
 		"axios": "^1.7.9",
-		"better-sqlite3": "^11.8.1",
 		"dotenv": "^16.4.7",
 		"express": "^4.21.2",
 		"node-schedule": "^2.1.1",

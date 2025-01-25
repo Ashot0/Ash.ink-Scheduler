@@ -3,6 +3,7 @@ import axios from 'axios';
 import schedule from 'node-schedule';
 import dotenv from 'dotenv';
 import Database from 'better-sqlite3';
+
 dotenv.config();
 
 // Environment variables
@@ -32,13 +33,15 @@ app.listen(port, () => {
 	console.log(`Server is running on port ${port}`);
 });
 
+// Prevent overlapping tasks
+let isProcessing = false;
+
 /**
  * Check if a pin has already been sent
  */
 function isPinSent(pinId) {
 	const stmt = db.prepare('SELECT id FROM sent_pins WHERE id = ?');
-	const result = stmt.get(pinId);
-	return !!result; // Returns true if a record is found
+	return !!stmt.get(pinId); // Returns true if a record is found
 }
 
 /**
@@ -136,42 +139,57 @@ async function sendToTelegram(imageUrl, caption) {
  * Check and process pins (sending one pin)
  */
 async function processPins() {
-	console.log('Request a list of boards...');
-	const boards = await fetchBoards();
-
-	if (!boards.length) {
-		console.log('No boards available.');
+	if (isProcessing) {
+		console.log('Task is already running. Skipping...');
 		return;
 	}
 
-	// Process boards, sending only one pin from each
-	for (const board of boards) {
-		console.log(`Request Pins from a Board: ${board.name} (${board.id})`);
-		const pins = await fetchPinsFromBoard(board.id);
+	isProcessing = true; // Block other tasks
+	console.log('Request a list of boards...');
 
-		for (const pin of pins) {
-			// Check if the pin has already been sent
-			if (isPinSent(pin.id)) {
-				console.log(`Pin ${pin.id} has already been sent.`);
-				continue;
-			}
+	try {
+		const boards = await fetchBoards();
 
-			// Check for image availability
-			const imageUrl = findHighestResolutionImage(pin.media?.images || {});
-			if (!imageUrl) {
-				console.log(`No pin image available ${pin.id}: ${JSON.stringify(pin)}`);
-				continue;
-			}
+		if (!boards.length) {
+			console.log('No boards available.');
+			return;
+		}
 
-			// Attempt to send the image to Telegram
-			const success = await sendToTelegram(imageUrl, pin.title || '');
-			if (success) {
-				markPinAsSent(pin.id); // Add the pin ID to the database
-				return; // Stop after sending one pin
-			} else {
-				console.log(`Failed to send pin ${pin.id}.`);
+		// Process boards, sending only one pin from each
+		for (const board of boards) {
+			console.log(`Request Pins from a Board: ${board.name} (${board.id})`);
+			const pins = await fetchPinsFromBoard(board.id);
+
+			for (const pin of pins) {
+				// Check if the pin has already been sent
+				if (isPinSent(pin.id)) {
+					console.log(`Pin ${pin.id} has already been sent.`);
+					continue;
+				}
+
+				// Check for image availability
+				const imageUrl = findHighestResolutionImage(pin.media?.images || {});
+				if (!imageUrl) {
+					console.log(
+						`No pin image available ${pin.id}: ${JSON.stringify(pin)}`
+					);
+					continue;
+				}
+
+				// Attempt to send the image to Telegram
+				const success = await sendToTelegram(imageUrl, pin.title || '');
+				if (success) {
+					markPinAsSent(pin.id); // Add the pin ID to the database
+					return; // Stop after sending one pin
+				} else {
+					console.log(`Failed to send pin ${pin.id}.`);
+				}
 			}
 		}
+	} catch (error) {
+		console.error('Error during pin processing:', error.message);
+	} finally {
+		isProcessing = false; // Release the lock
 	}
 }
 
@@ -186,11 +204,11 @@ schedule.scheduleJob(scheduleInterval, async () => {
 /**
  * Test run on startup (sending one pin)
  */
-(async () => {
-	console.log('Initialization...');
-	if (!pinterestToken || !telegramBotToken || !channelId) {
-		console.error('Required environment variables are missing.');
-		process.exit(1);
-	}
-	await processPins();
-})();
+// (async () => {
+// 	console.log('Initialization...');
+// 	if (!pinterestToken || !telegramBotToken || !channelId) {
+// 		console.error('Required environment variables are missing.');
+// 		process.exit(1);
+// 	}
+// 	await processPins();
+// })();
