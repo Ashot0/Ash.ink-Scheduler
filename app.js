@@ -1,7 +1,7 @@
-import axios from 'axios';
-import schedule from 'node-schedule';
-import dotenv from 'dotenv';
-import fs from 'fs';
+const axios = require('axios');
+const schedule = require('node-schedule');
+const dotenv = require('dotenv');
+const fs = require('fs');
 
 dotenv.config();
 
