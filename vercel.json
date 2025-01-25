@@ -5,12 +5,5 @@
 			"src": "app.js",
 			"use": "@vercel/node"
 		}
-	],
-	"env": {
-		"PINTEREST_TOKEN": "@pinterest_token",
-		"TELEGRAM_TOKEN": "@telegram_token",
-		"CHANNEL_ID": "@channel_id",
-		"USERNAME_PINTEREST": "@username_pinterest",
-		"SCHEDULE_INTERVAL": "@schedule_interval"
-	}
+	]
 }
