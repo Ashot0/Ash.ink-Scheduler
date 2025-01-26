@@ -2,6 +2,7 @@ const axios = require('axios');
 const schedule = require('node-schedule');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const express = require('express'); // Подключаем Express для создания маршрута
 
 dotenv.config();
 
@@ -17,6 +18,25 @@ if (fs.existsSync(sentPinsFile)) {
 	const data = fs.readFileSync(sentPinsFile, 'utf-8');
 	sentPins = new Set(JSON.parse(data));
 }
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Лог запросов (опционально)
+app.use((req, res, next) => {
+	console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+	next();
+});
+
+// Корневой маршрут
+app.get('/', (req, res) => {
+	res.send('Приложение работает! 🚀');
+});
+
+// Запуск сервера
+app.listen(PORT, () => {
+	console.log(`Сервер запущен на порту ${PORT}`);
+});
 
 /**
  * Board list request function
@@ -166,15 +186,3 @@ schedule.scheduleJob(scheduleInterval, async () => {
 	console.log('Run a scheduled task...');
 	await processPins();
 });
-
-/**
- * Test run at startup (sending one pin)
- */
-(async () => {
-	console.log('Initialization...');
-	if (!pinterestToken || !telegramBotToken || !channelId) {
-		console.error('Required environment variables are missing.');
-		process.exit(1);
-	}
-	await processPins();
-})();
