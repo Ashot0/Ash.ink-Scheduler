@@ -34,17 +34,29 @@ npm install
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the root directory and populate it with the following:
+Create a `.env` file in the root directory and populate it with values from the provided `env.sample`.
 
-```env
-PINTEREST_TOKEN=your_pinterest_access_token
-TELEGRAM_TOKEN=your_telegram_bot_token
-CHANNEL_ID=your_telegram_channel_id
-USERNAME_PINTEREST=pinterest_user_id
-SCHEDULE_INTERVAL=0 * * * *    # minute/hour/day of month/month/day of week
+### 4. Get Pinterest Access Code
+
+To get the Pinterest authorization code, run:
+
+```bash
+node CodeURLGenerator.js
 ```
 
-### 4. Run the Application
+This will generate the URL for obtaining the authorization code from Pinterest.
+
+### 5. Get Pinterest Access Token and Refresh Token
+
+Once you have the authorization code, run:
+
+```bash
+node testPinterestAuth.js
+```
+
+This will provide you with your access and refresh tokens for Pinterest API access.
+
+### 6. Run the Application
 
 To start the application, run:
 
@@ -73,4 +85,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue on the [GitHub repository](https://github.com/Ashot0/Ash.ink-Scheduler)
+If you encounter any issues or have questions, please open an issue on the [GitHub repository](https://github.com/Ashot0/Ash.ink-Scheduler).
