@@ -4,7 +4,7 @@ const {
 	processPinsFromAllBoards,
 	startSchedule,
 } = require('./jobs/schedule.js');
-const { specificBoardMode } = require('./config.js');
+const config = require('./config.js');
 const { testPinterestToken } = require('./services/testToken.js');
 
 (async () => {
@@ -17,11 +17,10 @@ const { testPinterestToken } = require('./services/testToken.js');
 			console.error('Ошибка: Токен Pinterest неверный или истек.');
 			return;
 		}
-		console.log(specificBoardMode);
 
 		startServer(); // Запуск сервера
 
-		if (specificBoardMode === 'true') {
+		if (config.pinterest.specificBoardMode === 'true') {
 			console.log('Запуск обработки только для одной доски...');
 			await processPinsFromSpecificBoard();
 		} else {
@@ -29,7 +28,7 @@ const { testPinterestToken } = require('./services/testToken.js');
 			await processPinsFromAllBoards();
 		}
 
-		startSchedule(specificBoardMode === 'true');
+		startSchedule(config.pinterest.specificBoardMode === 'true');
 	} catch (err) {
 		console.error('Произошла ошибка:', err);
 	}

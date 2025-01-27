@@ -1,10 +1,10 @@
 const fs = require('fs');
-const { sentPinsFile } = require('../config');
+const config = require('../config');
 
 // Загрузка списка отправленных пинов
 function loadSentPins() {
-	if (fs.existsSync(sentPinsFile)) {
-		const data = fs.readFileSync(sentPinsFile, 'utf-8');
+	if (fs.existsSync(config.sentPinsFile)) {
+		const data = fs.readFileSync(config.sentPinsFile, 'utf-8');
 		return new Set(JSON.parse(data));
 	}
 	return new Set();
@@ -12,7 +12,7 @@ function loadSentPins() {
 
 // Сохранение списка отправленных пинов
 function saveSentPins(sentPins) {
-	fs.writeFileSync(sentPinsFile, JSON.stringify([...sentPins]));
+	fs.writeFileSync(config.sentPinsFile, JSON.stringify([...sentPins]));
 }
 
 // Поиск изображения с максимальным разрешением

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { pinterestToken } = require('../config');
+const config = require('../config');
 
 /**
  * Получение списка досок
@@ -9,7 +9,7 @@ async function fetchBoards() {
 
 	try {
 		const response = await axios.get(url, {
-			headers: { Authorization: `Bearer ${pinterestToken}` },
+			headers: { Authorization: `Bearer ${config.pinterest.token}` },
 		});
 		console.log(response.data);
 
@@ -33,7 +33,7 @@ async function fetchPinsFromBoard(boardId, bookmark = null) {
 
 	try {
 		const response = await axios.get(url, {
-			headers: { Authorization: `Bearer ${pinterestToken}` },
+			headers: { Authorization: `Bearer ${config.pinterest.token}` },
 			params,
 		});
 		// console.log(response.data);

@@ -1,15 +1,15 @@
 const axios = require('axios');
-const { telegramBotToken, channelId } = require('../config');
+const config = require('../config');
 
 /**
  * Отправка изображения в Telegram
  */
 async function sendToTelegram(imageUrl, caption = '') {
-	const url = `https://api.telegram.org/bot${telegramBotToken}/sendPhoto`;
+	const url = `https://api.telegram.org/bot${config.telegram.token}/sendPhoto`;
 
 	try {
 		const response = await axios.post(url, {
-			chat_id: channelId,
+			chat_id: config.telegram.channelId,
 			photo: imageUrl,
 			// Описание
 			// caption,

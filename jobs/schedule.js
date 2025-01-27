@@ -6,17 +6,17 @@ const {
 	saveSentPins,
 	findHighestResolutionImage,
 } = require('../services/utils');
-const { scheduleInterval, boardId } = require('../config');
+const config = require('../config');
 
 async function processPinsFromSpecificBoard() {
 	const sentPins = loadSentPins();
 
-	if (!boardId) {
+	if (!config.pinterest.boardId) {
 		console.error('Board ID is not specified in .env');
 		return;
 	}
 
-	console.log(`Запрашиваем пины с доски: ${boardId}`);
+	console.log(`Запрашиваем пины с доски: ${config.pinterest.boardId}`);
 
 	let bookmark = null; // Начинаем с пустого bookmark
 	let morePinsAvailable = true;
@@ -24,7 +24,7 @@ async function processPinsFromSpecificBoard() {
 	while (morePinsAvailable) {
 		// Запрашиваем пины с учетом текущего bookmark
 		const { items: pins, bookmark: newBookmark } = await fetchPinsFromBoard(
-			boardId,
+			config.pinterest.boardId,
 			bookmark
 		);
 
@@ -117,7 +117,7 @@ async function processPinsFromAllBoards() {
 
 // Планировщик с вариативным выбором
 function startSchedule(specificBoardMode) {
-	schedule.scheduleJob(scheduleInterval, async () => {
+	schedule.scheduleJob(config.scheduleInterval, async () => {
 		console.log('Запускаем задачу...');
 		if (specificBoardMode) {
 			console.log('Работаем с одной доской...');

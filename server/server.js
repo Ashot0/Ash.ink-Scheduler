@@ -1,5 +1,5 @@
 const express = require('express');
-const { port } = require('../config');
+const config = require('../config');
 
 const app = express();
 
@@ -16,8 +16,8 @@ app.get('/', (req, res) => {
 
 // Запуск сервера
 const startServer = () => {
-	app.listen(port, () => {
-		console.log(`Сервер запущен на порту ${port}`);
+	app.listen(config.port, () => {
+		console.log(`Сервер запущен на порту ${config.port}`);
 	});
 };
 
