@@ -21,6 +21,7 @@ connectToDb((err) => {
 	}
 });
 
+// ;
 (async () => {
 	try {
 		console.log('Инициализация...');

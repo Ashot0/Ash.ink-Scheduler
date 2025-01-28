@@ -6,18 +6,27 @@ const URL = config.mongoDB.url;
 let DBConnection;
 
 const addPinToDbAsync = async (id) => {
+	if (!DBConnection) {
+		throw new Error('Database not connected');
+	}
+
 	const db = DBConnection;
 	const myColl = db.collection('sentPins');
 	const doc = { id: id };
 	try {
 		const result = await myColl.insertOne(doc);
-		console.log(`Pin add with the _id: ${result.insertedId}`);
+		console.log(`Pin added with the _id: ${result.insertedId}`);
 	} catch (err) {
-		console.log('Error pin add:', err);
+		console.log('Error adding pin:', err);
+		throw err;
 	}
 };
 
 const writeAllPinsFromDbAsync = async () => {
+	if (!DBConnection) {
+		throw new Error('Database not connected');
+	}
+
 	const db = DBConnection;
 	const myColl = db.collection('sentPins');
 	try {
@@ -33,12 +42,13 @@ module.exports = {
 	connectToDb: (cb) => {
 		MongoClient.connect(URL)
 			.then((client) => {
-				console.log('Connect to MongoDB');
+				console.log('Connected to MongoDB');
 				DBConnection = client.db();
-				return cb();
+				return cb(null); // Соединение установлено, передаем null как ошибку
 			})
 			.catch((err) => {
-				return cb();
+				console.error('Error connecting to MongoDB:', err);
+				return cb(err); // Передаем ошибку в callback
 			});
 	},
 	getDb: () => DBConnection,
