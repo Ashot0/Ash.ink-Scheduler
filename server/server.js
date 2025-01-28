@@ -13,19 +13,14 @@ const updateAuthCodeInConfig = (authCode) => {
 	try {
 		// Читаем содержимое config.js
 		let configContent = fs.readFileSync(configPath, 'utf-8');
-		console.log(configContent, '11111111111111');
 		// Обновляем поле `authCode`
 		configContent = configContent.replace(
 			/authCode: ['"`]?[^'"`,]+['"`]?,/,
 			`authCode: '${authCode}',`
 		);
-		console.log(configContent, '2222222222222222222');
 		// Записываем изменения обратно в файл
 		fs.writeFileSync(configPath, configContent, 'utf-8');
-		console.log(configContent, '333333333333333333');
 		console.log('✅ authCode успешно обновлён в config.js');
-		console.log(config);
-		console.log(configPath, 'ПУТЬ4444444444444444444444444');
 	} catch (error) {
 		console.error('❌ Ошибка при обновлении config.js:', error.message);
 	}
