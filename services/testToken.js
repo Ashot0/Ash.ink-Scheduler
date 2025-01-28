@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const configPath = path.resolve(__dirname, '../config.js'); // Путь к config.js
 let config = require(configPath); // Подгружаем текущий конфиг
+const getAccessToken = require('../testPinterestAuth');
 
 async function refreshPinterestToken() {
 	const { refreshToken, clientId, clientSecret } = config.pinterest;
@@ -45,7 +46,8 @@ async function refreshPinterestToken() {
 			'❌ Ошибка при обновлении токена:',
 			error.response?.data || error.message
 		);
-		return false;
+		getAccessToken();
+		return true;
 	}
 }
 
