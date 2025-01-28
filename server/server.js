@@ -23,6 +23,7 @@ const updateAuthCodeInConfig = (authCode) => {
 		// Записываем изменения обратно в файл
 		fs.writeFileSync(configPath, configContent, 'utf-8');
 		console.log('✅ authCode успешно обновлён в config.js');
+		console.log(config);
 	} catch (error) {
 		console.error('❌ Ошибка при обновлении config.js:', error.message);
 	}
