@@ -2,6 +2,8 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
+const { sendTelegramMessage } = require('./services/telegramNotifications.js');
+
 const configEnv = require('./config.js');
 
 // Путь к файлу конфигурации
@@ -82,6 +84,7 @@ const getAccessToken = async () => {
 		updateConfigFile(access_token, refresh_token);
 	} catch (error) {
 		if (error.response) {
+			sendTelegramMessage();
 			console.error('❌ Ошибка от Pinterest API:');
 			console.error('Код ошибки:', error.response.status);
 			console.error('Данные ошибки:', error.response.data);
