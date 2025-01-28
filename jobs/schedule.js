@@ -1,16 +1,13 @@
 const schedule = require('node-schedule');
+
 const { fetchBoards, fetchPinsFromBoard } = require('../services/pinterest.js');
 const { sendToTelegram } = require('../services/telegram.js');
-const {
-	loadSentPins,
-	saveSentPins,
-	findHighestResolutionImage,
-} = require('../services/utils');
+const { findHighestResolutionImage } = require('../services/utils');
+const { addPinToDb, writeAllPinsFromDb } = require('../services/db.js');
+
 const config = require('../config');
 
 async function processPinsFromSpecificBoard() {
-	const sentPins = loadSentPins();
-
 	if (!config.pinterest.boardId) {
 		console.error('Board ID is not specified in .env');
 		return;
@@ -33,9 +30,10 @@ async function processPinsFromSpecificBoard() {
 			break;
 		}
 
+		const allPinsFromDB = await writeAllPinsFromDb();
 		// Обработка пинов
 		for (const pin of pins) {
-			if (sentPins.has(pin.id)) {
+			if (allPinsFromDB.some((pinInDb) => pinInDb.id === pin.id)) {
 				console.log(`Пин ${pin.id} уже отправлен.`);
 				continue;
 			}
@@ -48,8 +46,7 @@ async function processPinsFromSpecificBoard() {
 
 			const success = await sendToTelegram(imageUrl, pin.title || '');
 			if (success) {
-				sentPins.add(pin.id);
-				saveSentPins(sentPins);
+				await addPinToDb(pin.id);
 				return; // После успешной отправки завершаем обработку
 			}
 		}
@@ -61,7 +58,6 @@ async function processPinsFromSpecificBoard() {
 }
 
 async function processPinsFromAllBoards() {
-	const sentPins = loadSentPins();
 	const boards = await fetchBoards();
 
 	if (!boards.length) {
@@ -87,9 +83,10 @@ async function processPinsFromAllBoards() {
 				break;
 			}
 
+			const allPinsFromDB = await writeAllPinsFromDb();
 			// Обработка пинов
 			for (const pin of pins) {
-				if (sentPins.has(pin.id)) {
+				if (allPinsFromDB.some((pinInDb) => pinInDb.id === pin.id)) {
 					console.log(`Пин ${pin.id} уже отправлен.`);
 					continue;
 				}
@@ -102,8 +99,7 @@ async function processPinsFromAllBoards() {
 
 				const success = await sendToTelegram(imageUrl, pin.title || '');
 				if (success) {
-					sentPins.add(pin.id);
-					saveSentPins(sentPins);
+					await addPinToDb(pin.id);
 					return;
 				}
 			}

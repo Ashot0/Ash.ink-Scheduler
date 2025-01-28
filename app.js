@@ -7,6 +7,20 @@ const {
 const config = require('./config.js');
 const { testPinterestToken } = require('./services/testToken.js');
 
+const { connectToDb, getDb } = require('./services/db.js');
+
+//
+
+let db;
+
+connectToDb((err) => {
+	if (!err) {
+		db = getDb();
+	} else {
+		console.log('DBConnection error:', err);
+	}
+});
+
 (async () => {
 	try {
 		console.log('Инициализация...');

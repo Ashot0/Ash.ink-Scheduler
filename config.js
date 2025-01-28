@@ -5,7 +5,10 @@ dotenv.config();
 module.exports = {
 	scheduleInterval: process.env.SCHEDULE_INTERVAL || '0 * * * *', // Интервал расписания
 	port: process.env.PORT || 3000,
-	sentPinsFile: './data/sentPins.json',
+
+	mongoDB: {
+		url: process.env.MONGODB_CONNECTION,
+	},
 
 	telegram: {
 		token: process.env.TELEGRAM_TOKEN, // Токен Telegram-бота
