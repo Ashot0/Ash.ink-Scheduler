@@ -6,45 +6,39 @@ const {
 } = require('./jobs/schedule.js');
 const config = require('./config.js');
 const { testPinterestToken } = require('./services/testToken.js');
+const { initDb } = require('./services/db.js');
 
-const { connectToDb, getDb } = require('./services/db.js');
-
-//
-
-let db;
-
-connectToDb((err) => {
-	if (!err) {
-		db = getDb();
-	} else {
-		console.log('DBConnection error:', err);
-	}
-});
-
-// ;
 (async () => {
 	try {
-		console.log('Инициализация...');
+		console.log('🚀 Инициализация...');
+
+		// Подключение к БД
+		(async () => {
+			await initDb();
+			startServer(); // Запускаем сервер после успешного подключения к БД
+		})();
 
 		// Проверка токена Pinterest
 		const tokenValid = await testPinterestToken();
 		if (!tokenValid) {
-			console.error('Ошибка: Токен Pinterest неверный или истек.');
-			return;
+			console.error('❌ Ошибка: Токен Pinterest неверный или истек.');
+			process.exit(1); // Завершаем процесс, чтобы не висел
 		}
 
-		startServer(); // Запуск сервера
+		// Откладываем обработку пинов на 5 секунд (чтобы снизить нагрузку при старте)
+		setTimeout(async () => {
+			if (config.pinterest.specificBoardMode === 'true') {
+				console.log('📌 Запуск обработки только для одной доски...');
+				await processPinsFromSpecificBoard();
+			} else {
+				console.log('📌 Запуск обработки для всех досок...');
+				await processPinsFromAllBoards();
+			}
 
-		if (config.pinterest.specificBoardMode === 'true') {
-			console.log('Запуск обработки только для одной доски...');
-			await processPinsFromSpecificBoard();
-		} else {
-			console.log('Запуск обработки для всех досок...');
-			await processPinsFromAllBoards();
-		}
-
-		startSchedule(config.pinterest.specificBoardMode === 'true');
+			startSchedule(config.pinterest.specificBoardMode === 'true');
+		}, 5000);
 	} catch (err) {
-		console.error('Произошла ошибка:', err);
+		console.error('❌ Ошибка при запуске приложения:', err);
+		process.exit(1);
 	}
 })();

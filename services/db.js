@@ -2,56 +2,55 @@ const { MongoClient } = require('mongodb');
 const config = require('../config');
 
 const URL = config.mongoDB.url;
+let DBConnection = null; // Храним подключение в памяти
 
-let DBConnection;
-
-const addPinToDbAsync = async (id) => {
-	if (!DBConnection) {
-		throw new Error('Database not connected');
+async function initDb() {
+	if (DBConnection) {
+		console.log('📦 Уже подключено к MongoDB');
+		return;
 	}
 
-	const db = DBConnection;
-	const myColl = db.collection('sentPins');
-	const doc = { id: id };
 	try {
-		const result = await myColl.insertOne(doc);
-		console.log(`Pin added with the _id: ${result.insertedId}`);
+		const client = new MongoClient(URL, {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+		});
+		await client.connect();
+		DBConnection = client.db();
+		console.log('✅ Успешное подключение к MongoDB');
 	} catch (err) {
-		console.log('Error adding pin:', err);
-		throw err;
+		console.error('❌ Ошибка подключения к MongoDB:', err);
+		process.exit(1); // Завершаем процесс, чтобы перезапустить сервер
 	}
-};
+}
 
-const writeAllPinsFromDbAsync = async () => {
-	if (!DBConnection) {
-		throw new Error('Database not connected');
-	}
+async function addPinToDb(id) {
+	if (!DBConnection) throw new Error('❌ Ошибка: База данных не подключена');
 
-	const db = DBConnection;
-	const myColl = db.collection('sentPins');
+	const myColl = DBConnection.collection('sentPins');
 	try {
-		const result = await myColl.find().toArray();
-		return result;
+		const result = await myColl.insertOne({ id });
+		console.log(`✅ Пин добавлен в базу: ${result.insertedId}`);
 	} catch (err) {
-		console.log('Error fetching pins:', err);
-		throw err;
+		console.error('❌ Ошибка добавления пина:', err);
 	}
-};
+}
+
+async function writeAllPinsFromDb() {
+	if (!DBConnection) throw new Error('❌ Ошибка: База данных не подключена');
+
+	const myColl = DBConnection.collection('sentPins');
+	try {
+		return await myColl.find().toArray();
+	} catch (err) {
+		console.error('❌ Ошибка загрузки пинов из базы:', err);
+		return [];
+	}
+}
 
 module.exports = {
-	connectToDb: (cb) => {
-		MongoClient.connect(URL)
-			.then((client) => {
-				console.log('Connected to MongoDB');
-				DBConnection = client.db();
-				return cb(null); // Соединение установлено, передаем null как ошибку
-			})
-			.catch((err) => {
-				console.error('Error connecting to MongoDB:', err);
-				return cb(err); // Передаем ошибку в callback
-			});
-	},
+	initDb,
+	addPinToDb,
+	writeAllPinsFromDb,
 	getDb: () => DBConnection,
-	addPinToDb: (id) => addPinToDbAsync(id),
-	writeAllPinsFromDb: writeAllPinsFromDbAsync,
 };

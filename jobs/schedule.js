@@ -2,65 +2,53 @@ const schedule = require('node-schedule');
 const { fetchBoards, fetchPinsFromBoard } = require('../services/pinterest.js');
 const { sendToTelegram } = require('../services/telegram.js');
 const { findHighestResolutionImage } = require('../services/utils');
-const {
-	addPinToDb,
-	writeAllPinsFromDb,
-	connectToDb,
-} = require('../services/db.js');
-
+const { addPinToDb, writeAllPinsFromDb } = require('../services/db.js');
 const config = require('../config');
 
 async function processPinsFromSpecificBoard() {
 	if (!config.pinterest.boardId) {
-		console.error('Board ID is not specified in .env');
+		console.error('❌ Ошибка: Board ID не указан в .env');
 		return;
 	}
 
 	try {
-		// Дожидаемся подключения к базе данных
-		await new Promise((resolve, reject) => {
-			connectToDb((err) => {
-				if (err) {
-					reject('Ошибка подключения к базе данных');
-				} else {
-					resolve();
-				}
-			});
-		});
-		console.log(`Запрашиваем пины с доски: ${config.pinterest.boardId}`);
+		console.log(`📌 Получаем пины с доски: ${config.pinterest.boardId}`);
+		const allPinsFromDB = await writeAllPinsFromDb(); // Загружаем список отправленных пинов заранее
 
 		let bookmark = null;
 		let morePinsAvailable = true;
+		let iterationCount = 0;
+		const maxIterations = 10; // Предотвращаем бесконечный цикл
 
-		while (morePinsAvailable) {
+		while (morePinsAvailable && iterationCount < maxIterations) {
+			iterationCount++;
+
 			const { items: pins, bookmark: newBookmark } = await fetchPinsFromBoard(
 				config.pinterest.boardId,
 				bookmark
 			);
 
 			if (!pins.length) {
-				console.log('Пины на доске закончились.');
+				console.log('✅ Все пины на доске обработаны.');
 				break;
 			}
 
-			const allPinsFromDB = await writeAllPinsFromDb();
-
 			for (const pin of pins) {
 				if (allPinsFromDB.some((pinInDb) => pinInDb.id === pin.id)) {
-					console.log(`Пин ${pin.id} уже отправлен.`);
-					continue;
+					continue; // Пропускаем уже отправленный пин
 				}
 
 				const imageUrl = findHighestResolutionImage(pin.media?.images || {});
-				if (!imageUrl) {
-					console.log(`У пина ${pin.id} нет изображения.`);
-					continue;
-				}
+				if (!imageUrl) continue;
 
-				const success = await sendToTelegram(imageUrl, pin.title || '');
-				if (success) {
-					await addPinToDb(pin.id);
-					return; // После успешной отправки завершаем обработку
+				try {
+					const success = await sendToTelegram(imageUrl, pin.title || '');
+					if (success) {
+						await addPinToDb(pin.id);
+						return; // Завершаем обработку после успешной отправки
+					}
+				} catch (err) {
+					console.error(`❌ Ошибка отправки пина ${pin.id}:`, err);
 				}
 			}
 
@@ -68,64 +56,57 @@ async function processPinsFromSpecificBoard() {
 			morePinsAvailable = !!bookmark;
 		}
 	} catch (err) {
-		console.error('Ошибка в процессе обработки пинов:', err);
+		console.error('❌ Ошибка обработки пинов:', err);
 	}
 }
 
 async function processPinsFromAllBoards() {
 	try {
-		await new Promise((resolve, reject) => {
-			connectToDb((err) => {
-				if (err) {
-					reject('Ошибка подключения к базе данных');
-				} else {
-					resolve();
-				}
-			});
-		});
-
 		const boards = await fetchBoards();
-
 		if (!boards.length) {
-			console.log('Доски не найдены.');
+			console.log('❌ Ошибка: Доски не найдены.');
 			return;
 		}
 
+		const allPinsFromDB = await writeAllPinsFromDb(); // Один раз загружаем список уже отправленных пинов
+
 		for (const board of boards) {
-			console.log(`Обрабатываем доску: ${board.name} (${board.id})`);
+			console.log(`📌 Обрабатываем доску: ${board.name} (${board.id})`);
 
 			let bookmark = null;
 			let morePinsAvailable = true;
+			let iterationCount = 0;
+			const maxIterations = 10; // Предотвращаем бесконечный цикл
 
-			while (morePinsAvailable) {
+			while (morePinsAvailable && iterationCount < maxIterations) {
+				iterationCount++;
+
 				const { items: pins, bookmark: newBookmark } = await fetchPinsFromBoard(
 					board.id,
 					bookmark
 				);
 
 				if (!pins.length) {
-					console.log(`Пины на доске ${board.name} закончились.`);
+					console.log(`✅ Все пины на доске ${board.name} обработаны.`);
 					break;
 				}
 
-				const allPinsFromDB = await writeAllPinsFromDb();
-
 				for (const pin of pins) {
 					if (allPinsFromDB.some((pinInDb) => pinInDb.id === pin.id)) {
-						console.log(`Пин ${pin.id} уже отправлен.`);
 						continue;
 					}
 
 					const imageUrl = findHighestResolutionImage(pin.media?.images || {});
-					if (!imageUrl) {
-						console.log(`У пина ${pin.id} нет изображения.`);
-						continue;
-					}
+					if (!imageUrl) continue;
 
-					const success = await sendToTelegram(imageUrl, pin.title || '');
-					if (success) {
-						await addPinToDb(pin.id);
-						return;
+					try {
+						const success = await sendToTelegram(imageUrl, pin.title || '');
+						if (success) {
+							await addPinToDb(pin.id);
+							return;
+						}
+					} catch (err) {
+						console.error(`❌ Ошибка отправки пина ${pin.id}:`, err);
 					}
 				}
 
@@ -134,18 +115,18 @@ async function processPinsFromAllBoards() {
 			}
 		}
 	} catch (err) {
-		console.error('Ошибка в процессе обработки пинов с досок:', err);
+		console.error('❌ Ошибка обработки пинов с досок:', err);
 	}
 }
 
 function startSchedule(specificBoardMode) {
 	schedule.scheduleJob(config.scheduleInterval, async () => {
-		console.log('Запускаем задачу...');
+		console.log('⏳ Запускаем задачу...');
 		if (specificBoardMode) {
-			console.log('Работаем с одной доской...');
+			console.log('🎯 Режим одной доски.');
 			await processPinsFromSpecificBoard();
 		} else {
-			console.log('Работаем со всеми досками...');
+			console.log('🔄 Режим всех досок.');
 			await processPinsFromAllBoards();
 		}
 	});

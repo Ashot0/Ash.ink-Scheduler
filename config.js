@@ -4,7 +4,7 @@ dotenv.config();
 
 module.exports = {
 	scheduleInterval: process.env.SCHEDULE_INTERVAL || '0 * * * *', // Интервал расписания
-	port: process.env.PORT || 3000,
+	port: process.env.PORT || 4000,
 
 	mongoDB: {
 		url: process.env.MONGODB_CONNECTION,
