@@ -7,7 +7,11 @@ const {
 const config = require('./config.js');
 const { testPinterestToken } = require('./services/testToken.js');
 const { initDb } = require('./services/db.js');
+const { getAccessToken } = require('./testPinterestAuth.js');
 
+//
+//
+//
 (async () => {
 	try {
 		console.log('🚀 Инициализация...');
@@ -22,7 +26,8 @@ const { initDb } = require('./services/db.js');
 		const tokenValid = await testPinterestToken();
 		if (!tokenValid) {
 			console.error('❌ Ошибка: Токен Pinterest неверный или истек.');
-			process.exit(1); // Завершаем процесс, чтобы не висел
+			// Перезапуск
+			getAccessToken();
 		}
 
 		// Откладываем обработку пинов на 5 секунд (чтобы снизить нагрузку при старте)
