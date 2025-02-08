@@ -1,36 +1,43 @@
-const startServer = require('./server/server');
+const { initDb } = require('./services/db');
+const { processTelegramImages } = require('./services/processTelegramImages');
 const {
 	processPinsFromSpecificBoard,
 	processPinsFromAllBoards,
 	startSchedule,
-} = require('./jobs/schedule.js');
-const config = require('./config.js');
-const { testPinterestToken } = require('./services/testToken.js');
-const { initDb } = require('./services/db.js');
-const { getAccessToken } = require('./testPinterestAuth.js');
+} = require('./jobs/schedule');
+const { testPinterestToken } = require('./services/testToken');
+const config = require('./config');
 
-//
-//
-//
 (async () => {
 	try {
 		console.log('🚀 Инициализация...');
 
-		// Подключение к БД
-		(async () => {
-			await initDb();
-			startServer(); // Запускаем сервер после успешного подключения к БД
-		})();
+		// Подключаемся к базе данных
+		await initDb();
 
-		// Проверка токена Pinterest
+		if (config.telegram.lsSpecialWork !== 'false') {
+			// Сначала обрабатываем ЛС Telegram
+			const telegramImageProcessed = await processTelegramImages();
+			if (telegramImageProcessed) {
+				console.log(
+					'Изображение из Telegram найдено и обработано. Обработка Pinterest пропускается.'
+				);
+				return;
+			}
+
+			// Если в ЛС нет изображений, продолжаем обработку Pinterest
+			console.log(
+				'Нет изображений в ЛС. Запуск обработки пинов с Pinterest...'
+			);
+		}
+		console.log('Верификация Pinterest токена...');
 		const tokenValid = await testPinterestToken();
 		if (!tokenValid) {
 			console.error('❌ Ошибка: Токен Pinterest неверный или истек.');
-			// Перезапуск
-			getAccessToken();
+			process.exit(1);
 		}
 
-		// Откладываем обработку пинов на 5 секунд (чтобы снизить нагрузку при старте)
+		// Задержка для уменьшения нагрузки при старте
 		setTimeout(async () => {
 			if (config.pinterest.specificBoardMode === 'true') {
 				console.log('📌 Запуск обработки только для одной доски...');
@@ -39,11 +46,10 @@ const { getAccessToken } = require('./testPinterestAuth.js');
 				console.log('📌 Запуск обработки для всех досок...');
 				await processPinsFromAllBoards();
 			}
-
 			startSchedule(config.pinterest.specificBoardMode === 'true');
 		}, 5000);
-	} catch (err) {
-		console.error('❌ Ошибка при запуске приложения:', err);
+	} catch (error) {
+		console.error('❌ Ошибка при запуске приложения:', error);
 		process.exit(1);
 	}
 })();

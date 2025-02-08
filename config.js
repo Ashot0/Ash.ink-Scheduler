@@ -14,6 +14,7 @@ module.exports = {
 		token: process.env.TELEGRAM_TOKEN, // Токен Telegram-бота
 		channelId: process.env.TELEGRAM_CHANNEL_ID, // ID Telegram-канала
 		usernamelId: process.env.TELEGRAM_USERNAME_ID, // ID Telegram-аккаунта
+		lsSpecialWork: process.env.LS_SPECIAL_WORK || 'false',
 	},
 
 	pinterest: {
