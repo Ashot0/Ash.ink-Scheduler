@@ -35,7 +35,12 @@ async function processPinsFromSpecificBoard() {
 				const imageUrl = findHighestResolutionImage(pin.media?.images || {});
 				if (!imageUrl) continue;
 				try {
-					const success = await sendToTelegram(imageUrl, pin.title || '');
+					const success = await sendToTelegram(
+						imageUrl,
+						// pin.title ||
+						''
+					);
+
 					if (success) {
 						await addPinToDb(pin.id);
 						return;
@@ -92,7 +97,11 @@ async function processPinsFromAllBoards() {
 					if (!imageUrl) continue;
 
 					try {
-						const success = await sendToTelegram(imageUrl, pin.title || '');
+						const success = await sendToTelegram(
+							imageUrl,
+							// pin.title ||
+							''
+						);
 						if (success) {
 							await addPinToDb(pin.id);
 							return;

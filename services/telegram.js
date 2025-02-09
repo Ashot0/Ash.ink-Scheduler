@@ -13,7 +13,7 @@ async function sendToTelegram(imageId, caption = '') {
 		const response = await axios.post(url, {
 			chat_id: config.telegram.channelId,
 			photo: imageId,
-			// caption,
+			caption,
 		});
 		console.log('Успешно отправлено в Telegram:', response.data);
 		return true;
