@@ -1,3 +1,4 @@
+const startServer = require('./server/server');
 const { initDb } = require('./services/db');
 const { processTelegramImages } = require('./services/processTelegramImages');
 const {
@@ -13,8 +14,10 @@ const config = require('./config');
 		console.log('🚀 Инициализация...');
 
 		// Подключаемся к базе данных
-		await initDb();
-
+		(async () => {
+			await initDb();
+			startServer(); // Запускаем сервер после успешного подключения к БД
+		})();
 		if (config.telegram.lsSpecialWork !== 'false') {
 			// Сначала обрабатываем ЛС Telegram
 			const telegramImageProcessed = await processTelegramImages();
