@@ -1,6 +1,5 @@
 const startServer = require('./server/server');
 const { initDb } = require('./services/db');
-const { processTelegramImages } = require('./services/processTelegramImages');
 const {
 	processPinsFromSpecificBoard,
 	processPinsFromAllBoards,
@@ -18,21 +17,7 @@ const config = require('./config');
 			await initDb();
 			startServer(); // Запускаем сервер после успешного подключения к БД
 		})();
-		if (config.telegram.lsSpecialWork !== 'false') {
-			// Сначала обрабатываем ЛС Telegram
-			const telegramImageProcessed = await processTelegramImages();
-			if (telegramImageProcessed) {
-				console.log(
-					'Изображение из Telegram найдено и обработано. Обработка Pinterest пропускается.'
-				);
-				return;
-			}
 
-			// Если в ЛС нет изображений, продолжаем обработку Pinterest
-			console.log(
-				'Нет изображений в ЛС. Запуск обработки пинов с Pinterest...'
-			);
-		}
 		console.log('Верификация Pinterest токена...');
 		const tokenValid = await testPinterestToken();
 		if (!tokenValid) {
