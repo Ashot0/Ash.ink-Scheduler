@@ -1,11 +1,15 @@
 # Ash.ink Scheduler
 
-Ash.ink Scheduler is a simple application that automates the process of publishing Pinterest pins to Telegram channels. It leverages the Pinterest API and Telegram Bot API to streamline content sharing.
+Ash.ink Scheduler is a simple application that automates the process of publishing Pinterest pins to Telegram channels. It leverages the Pinterest API and Telegram Bot API to streamline content sharing.  
+Now, it also supports **direct image uploads via Telegram** for priority posting.
 
 ## Features
 
 - Fetches pins from your Pinterest account.
-- Automatically posts pins to a specified Telegram channel.
+- Accepts **incoming images via Telegram** (direct messages or a specific chat).
+- Prioritizes **user-uploaded images**, placing them at the beginning of the posting queue.
+- Automatically deletes processed images to prevent duplicates.
+- Automatically posts pins and uploaded images to a specified Telegram channel.
 - Runs on a scheduled basis (e.g., hourly).
 
 ## Requirements
@@ -66,9 +70,12 @@ node app.js
 
 ## How It Works
 
-1. The application uses your Pinterest Access Token to fetch pins from your saved content.
-2. It formats the pins and sends them to your Telegram channel using the Telegram Bot API.
-3. Posts are sent automatically at the specified interval defined in the `.env` file.
+1. The application fetches pins from your Pinterest account using your **Pinterest Access Token**.
+2. It formats the pins and sends them to your Telegram channel using the **Telegram Bot API**.
+3. Users can now **send images directly to the bot via Telegram** (private messages or a specific chat).
+4. **Uploaded images are prioritized**—they are posted before any Pinterest pins.
+5. After posting, uploaded images are **automatically deleted** from the conversation to prevent duplicates.
+6. Posts are sent automatically at the specified interval defined in the `.env` file.
 
 ## Customization
 
@@ -86,3 +93,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Support
 
 If you encounter any issues or have questions, please open an issue on the [GitHub repository](https://github.com/Ashot0/Ash.ink-Scheduler).
+```
