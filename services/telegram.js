@@ -48,8 +48,8 @@ async function getTelegramFileUrl(fileId) {
 /**
  * Получение обновлений (новых сообщений) от Telegram.
  */
-async function getUpdates() {
-	const url = `https://api.telegram.org/bot${config.telegram.token}/getUpdates`;
+async function getUpdates(offset) {
+	const url = `https://api.telegram.org/bot${config.telegram.token}/getUpdates?offset=${offset}`;
 	try {
 		const response = await axios.get(url);
 		return response.data.result || [];

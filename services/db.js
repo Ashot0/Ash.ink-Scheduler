@@ -24,10 +24,10 @@ async function initDb() {
 	}
 }
 
-async function addPinToDb(id) {
+async function addPinToDb(id, collection) {
 	if (!DBConnection) throw new Error('❌ Ошибка: База данных не подключена');
 
-	const myColl = DBConnection.collection('sentPins');
+	const myColl = DBConnection.collection(collection);
 	try {
 		const result = await myColl.insertOne({ id });
 		console.log(`✅ Пин добавлен в базу: ${result.insertedId}`);
@@ -36,10 +36,10 @@ async function addPinToDb(id) {
 	}
 }
 
-async function writeAllPinsFromDb() {
+async function writeAllPinsFromDb(collection) {
 	if (!DBConnection) throw new Error('❌ Ошибка: База данных не подключена');
 
-	const myColl = DBConnection.collection('sentPins');
+	const myColl = DBConnection.collection(collection);
 	try {
 		return await myColl.find().toArray();
 	} catch (err) {
