@@ -12,7 +12,7 @@ const axios = require('axios');
 async function processTelegramImages() {
 	try {
 		// Получаем все обработанные ID сообщений
-		const processedMessages = await writeAllPinsFromDb('sentPinsLs');
+		const processedMessages = await writeAllPinsFromDb(config.mongoDB.bd2);
 
 		// Получаем обновления с самого начала
 		const updates = await getUpdates(0);
@@ -43,7 +43,7 @@ async function processTelegramImages() {
 		if (success) {
 			// Удаляем из ЛС и сохраняем в базу
 			await deleteMessage(chat.id, message_id);
-			await addPinToDb(oldestUpdate.update_id, 'sentPinsLs');
+			await addPinToDb(oldestUpdate.update_id, config.mongoDB.bd2);
 			console.log(`Обработано сообщение ID: ${oldestUpdate.update_id}`);
 			return true;
 		}

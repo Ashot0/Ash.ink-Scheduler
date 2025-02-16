@@ -13,7 +13,7 @@ async function processPinsFromSpecificBoard() {
 	}
 	try {
 		console.log(`📌 Получаем пины с доски: ${config.pinterest.boardId}`);
-		const allPinsFromDB = await writeAllPinsFromDb('sentPins');
+		const allPinsFromDB = await writeAllPinsFromDb(config.mongoDB.bd1);
 		let bookmark = null;
 		let morePinsAvailable = true;
 		let iterationCount = 0;
@@ -42,7 +42,7 @@ async function processPinsFromSpecificBoard() {
 					);
 
 					if (success) {
-						await addPinToDb(pin.id, 'sentPins');
+						await addPinToDb(pin.id, config.mongoDB.bd1);
 						return;
 					}
 				} catch (error) {
@@ -65,7 +65,7 @@ async function processPinsFromAllBoards() {
 			return;
 		}
 
-		const allPinsFromDB = await writeAllPinsFromDb('sentPins'); // Один раз загружаем список уже отправленных пинов
+		const allPinsFromDB = await writeAllPinsFromDb(config.mongoDB.bd1); // Один раз загружаем список уже отправленных пинов
 
 		for (const board of boards) {
 			console.log(`📌 Обрабатываем доску: ${board.name} (${board.id})`);
@@ -103,7 +103,7 @@ async function processPinsFromAllBoards() {
 							''
 						);
 						if (success) {
-							await addPinToDb(pin.id, 'sentPins');
+							await addPinToDb(pin.id, config.mongoDB.bd1);
 							return;
 						}
 					} catch (err) {
