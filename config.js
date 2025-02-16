@@ -8,6 +8,7 @@ module.exports = {
 
 	mongoDB: {
 		url: process.env.MONGODB_CONNECTION,
+		bd1: process.env.DB_1,
 	},
 
 	telegram: {
