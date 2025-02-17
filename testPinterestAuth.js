@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const { sendTelegramMessage } = require('./services/telegramNotifications.js');
+const { restartApp } = require('./services/utils.js');
 
 const configEnv = require('./config.js');
 
@@ -44,6 +45,8 @@ const updateConfigFile = (accessToken, refreshToken) => {
 		// Записываем изменения обратно в файл
 		fs.writeFileSync(configPath, configContent, 'utf-8');
 		console.log('✅ Токены успешно записаны в config.js');
+
+		setTimeout(restartApp, 1000);
 	} catch (error) {
 		console.error('❌ Ошибка при обновлении config.js:', error.message);
 	}
@@ -65,6 +68,7 @@ const getAccessToken = async () => {
 				grant_type: 'authorization_code',
 				code: config.code,
 				redirect_uri: config.redirect_uri,
+				continuous_refresh: 'true', // добавляем параметр для continuous refresh token
 			}).toString(),
 			{
 				headers: {

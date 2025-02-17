@@ -1,3 +1,5 @@
+const { startApp } = require('../app.js');
+
 function findHighestResolutionImage(images) {
 	let highestResolution = null;
 
@@ -14,4 +16,9 @@ function findHighestResolutionImage(images) {
 	return highestResolution ? highestResolution.url : null;
 }
 
-module.exports = { findHighestResolutionImage };
+function restartApp() {
+	console.log('🔄 Перезапуск приложения...');
+	setTimeout(() => startApp, 1000);
+}
+
+module.exports = { findHighestResolutionImage, restartApp };

@@ -1,18 +1,21 @@
 const startServer = require('./server/server');
+const { initDb } = require('./services/db.js');
 const {
 	processPinsFromSpecificBoard,
 	processPinsFromAllBoards,
 	startSchedule,
 } = require('./jobs/schedule.js');
+const {
+	testPinterestToken,
+	refreshPinterestToken,
+} = require('./services/testToken');
 const config = require('./config.js');
-const { testPinterestToken } = require('./services/testToken.js');
-const { initDb } = require('./services/db.js');
 const { getAccessToken } = require('./testPinterestAuth.js');
 
 //
 //
 //
-(async () => {
+async function startApp() {
 	try {
 		console.log('🚀 Инициализация...');
 
@@ -22,15 +25,18 @@ const { getAccessToken } = require('./testPinterestAuth.js');
 			startServer(); // Запускаем сервер после успешного подключения к БД
 		})();
 
-		// Проверка токена Pinterest
+		console.log('Верификация Pinterest токена...');
 		const tokenValid = await testPinterestToken();
+
+		// Если токен недействителен, обновляем его и перезапускаем приложение
 		if (!tokenValid) {
-			console.error('❌ Ошибка: Токен Pinterest неверный или истек.');
-			// Перезапуск
-			getAccessToken();
+			console.error(
+				'❌ Ошибка: Токен Pinterest неверный или истек. Обновляем токен...'
+			);
+			await refreshPinterestToken();
 		}
 
-		// Откладываем обработку пинов на 5 секунд (чтобы снизить нагрузку при старте)
+		// Задержка для уменьшения нагрузки при старте
 		setTimeout(async () => {
 			if (config.pinterest.specificBoardMode === 'true') {
 				console.log('📌 Запуск обработки только для одной доски...');
@@ -39,11 +45,13 @@ const { getAccessToken } = require('./testPinterestAuth.js');
 				console.log('📌 Запуск обработки для всех досок...');
 				await processPinsFromAllBoards();
 			}
-
 			startSchedule(config.pinterest.specificBoardMode === 'true');
 		}, 5000);
-	} catch (err) {
-		console.error('❌ Ошибка при запуске приложения:', err);
+	} catch (error) {
+		console.error('❌ Ошибка при запуске приложения:', error);
 		process.exit(1);
 	}
-})();
+}
+
+startApp();
+module.exports = startApp;
