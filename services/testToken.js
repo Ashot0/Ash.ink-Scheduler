@@ -4,6 +4,7 @@ const path = require('path');
 const configPath = path.resolve(__dirname, '../config.js'); // Путь к config.js
 let config = require(configPath); // Подгружаем текущий конфиг
 const getAccessToken = require('../testPinterestAuth');
+const { restartApp } = require('./utils.js');
 
 async function refreshPinterestToken() {
 	const { refreshToken, clientId, clientSecret } = config.pinterest;
@@ -32,22 +33,27 @@ async function refreshPinterestToken() {
 		);
 
 		const newAccessToken = response.data.access_token;
+		const newRefreshToken = response.data.refresh_token; // Получаем новый continuous refresh token, если он есть
 		console.log('✅ Новый токен Pinterest получен:', newAccessToken);
 
-		// Обновляем токен в конфиге
+		// Обновляем токены в конфиге
 		config.pinterest.token = newAccessToken;
+		if (newRefreshToken) {
+			config.pinterest.refreshToken = newRefreshToken;
+		}
 		const configString = `module.exports = ${JSON.stringify(config, null, 2)};`;
 		fs.writeFileSync(configPath, configString, 'utf-8');
-		console.log('✅ Токен обновлён и записан в config.js.');
+		console.log('✅ Токены обновлены и записаны в config.js.');
 
+		setTimeout(restartApp, 1000);
 		return true;
 	} catch (error) {
 		console.error(
 			'❌ Ошибка при обновлении токена:',
 			error.response?.data || error.message
 		);
-		getAccessToken();
-		return true;
+		// Ожидаем завершения getAccessToken и возвращаем его результат
+		return await getAccessToken();
 	}
 }
 

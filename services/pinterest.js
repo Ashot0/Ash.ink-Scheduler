@@ -1,10 +1,33 @@
 const axios = require('axios');
-const config = require('../config');
+const path = require('path');
+const fs = require('fs');
+let config = require('../config');
+
+// Функция для обновления конфига
+function reloadConfig() {
+	try {
+		delete require.cache[require.resolve('../config')];
+		config = require('../config');
+		console.log('🔄 Конфиг перезагружен. Новый токен:', config.pinterest.token);
+	} catch (error) {
+		console.error('❌ Ошибка при перезагрузке конфига:', error.message);
+	}
+}
 
 // Конфигурация Axios
 const axiosInstance = axios.create({
 	baseURL: 'https://api.pinterest.com/v5/',
-	headers: { Authorization: `Bearer ${config.pinterest.token}` },
+});
+
+let lastToken = config.pinterest.token;
+
+axiosInstance.interceptors.request.use((requestConfig) => {
+	if (config.pinterest.token !== lastToken) {
+		reloadConfig();
+		lastToken = config.pinterest.token;
+	}
+	requestConfig.headers.Authorization = `Bearer ${config.pinterest.token}`;
+	return requestConfig;
 });
 
 /**

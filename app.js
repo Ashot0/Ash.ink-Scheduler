@@ -5,10 +5,13 @@ const {
 	processPinsFromAllBoards,
 	startSchedule,
 } = require('./jobs/schedule');
-const { testPinterestToken } = require('./services/testToken');
+const {
+	testPinterestToken,
+	refreshPinterestToken,
+} = require('./services/testToken');
 const config = require('./config');
 
-(async () => {
+async function startApp() {
 	try {
 		console.log('🚀 Инициализация...');
 
@@ -20,9 +23,13 @@ const config = require('./config');
 
 		console.log('Верификация Pinterest токена...');
 		const tokenValid = await testPinterestToken();
+
+		// Если токен недействителен, обновляем его и перезапускаем приложение
 		if (!tokenValid) {
-			console.error('❌ Ошибка: Токен Pinterest неверный или истек.');
-			process.exit(1);
+			console.error(
+				'❌ Ошибка: Токен Pinterest неверный или истек. Обновляем токен...'
+			);
+			await refreshPinterestToken();
 		}
 
 		// Задержка для уменьшения нагрузки при старте
@@ -40,4 +47,7 @@ const config = require('./config');
 		console.error('❌ Ошибка при запуске приложения:', error);
 		process.exit(1);
 	}
-})();
+}
+
+startApp();
+module.exports = startApp;
