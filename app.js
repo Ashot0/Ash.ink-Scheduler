@@ -79,11 +79,7 @@ bot.on('message', async (ctx) => {
 			console.log(`Сообщение добавлено в базу данных`);
 
 			const replyMessage = `
-Данные, добавленные в базу данных:
-- Chat ID: ${message.chat.id}
-- Message ID: ${message.message_id}
-- File ID: ${fileId || 'Нет медиафайла'}
-- Caption: ${caption || 'Нет текста'}
+Message ID: ${message.message_id}
             `;
 
 			// Отправляем ответ с данными
