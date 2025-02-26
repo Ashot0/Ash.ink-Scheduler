@@ -71,11 +71,25 @@ bot.on('message', async (ctx) => {
 					messageId: message.message_id,
 					fileId: fileId,
 					caption: caption,
+					createdAt: new Date(),
 				},
 				config.mongoDB.bd2
 			);
 
 			console.log(`Сообщение добавлено в базу данных`);
+
+			const replyMessage = `
+Данные, добавленные в базу данных:
+- Chat ID: ${message.chat.id}
+- Message ID: ${message.message_id}
+- File ID: ${fileId || 'Нет медиафайла'}
+- Caption: ${caption || 'Нет текста'}
+            `;
+
+			// Отправляем ответ с данными
+			await bot.telegram.sendMessage(message.chat.id, replyMessage, {
+				reply_to_message_id: message.message_id,
+			});
 		}
 	} catch (error) {
 		console.error('Ошибка обработки входящих сообщений:', error);
