@@ -1,58 +1,51 @@
-const { sendToTelegram, getUpdates, deleteMessage } = require('./telegram');
-const { addPinToDb, writeAllPinsFromDb } = require('./db');
-
+const { sendToTelegram, deleteMessage } = require('./telegram');
+const { getMessageFromDb, deleteMessageFromDb } = require('../services/db');
 const config = require('../config');
-const axios = require('axios');
-/**
- * Проверяет обновления Telegram на наличие сообщений с изображениями в ЛС.
- * Если найдено – отправляет изображение в канал и удаляет сообщение.
- * После обработки обновлений выставляет offset, чтобы те же обновления не возвращались.
- * Возвращает true, если хотя бы одно сообщение обработано, иначе false.
- */
+
+// Получаем file_id из сообщения
+function getFileId(message) {
+	const mediaTypes = ['photo', 'video', 'document', 'audio', 'animation'];
+	const mediaType = mediaTypes.find((type) => message[type]);
+	if (!mediaType) return null;
+	const mediaContent = message[mediaType];
+	return Array.isArray(mediaContent)
+		? mediaContent.pop().file_id
+		: mediaContent.file_id;
+}
+
 async function processTelegramImages() {
 	try {
-		// Получаем все обработанные ID сообщений
-		const processedMessages = await writeAllPinsFromDb(config.mongoDB.bd2);
+		// Получаем и удаляем сообщение из базы
+		const message = await getMessageFromDb(config.mongoDB.bd2);
 
-		// Получаем обновления с самого начала
-		const updates = await getUpdates(0);
-
-		// Фильтруем только новые сообщения из ЛС с фото
-		const validUpdates = updates.filter((update) => {
-			const msg = update.message;
-			return (
-				msg?.chat?.type === 'private' &&
-				msg.photo &&
-				!processedMessages.some((m) => m.id === update.update_id)
-			);
-		});
-
-		if (validUpdates.length === 0) {
+		if (!message) {
 			console.log('Нет новых сообщений для обработки');
 			return false;
 		}
 
-		// Берем самое старое необработанное сообщение
-		const oldestUpdate = validUpdates[0];
-		const { chat, message_id, photo } = oldestUpdate.message;
+		const { chatId, messageId, fileId, caption } = message;
 
-		// Отправляем в канал
-		const fileId = photo[photo.length - 1].file_id;
-		const success = await sendToTelegram(fileId, '#предложка');
-
-		if (success) {
-			// Удаляем из ЛС и сохраняем в базу
-			await deleteMessage(chat.id, message_id);
-			await addPinToDb(oldestUpdate.update_id, config.mongoDB.bd2);
-			console.log(`Обработано сообщение ID: ${oldestUpdate.update_id}`);
-			return true;
+		// Отправляем сообщение в канал
+		let success = false;
+		if (fileId) {
+			success = await sendToTelegram(fileId, caption || '#предложка');
+		} else if (caption) {
+			success = await sendToTelegram(caption, '#предложка');
 		}
 
-		return false;
+		if (success) {
+			// Удаляем сообщение из личных сообщений
+			await deleteMessage(chatId, messageId);
+			console.log(`Сообщение ${message._id} успешно обработано и удалено`);
+		} else {
+			console.log(`Не удалось обработать сообщение ${message._id}`);
+		}
+
+		return success;
 	} catch (error) {
-		console.error('Ошибка обработки:', error);
+		console.error('Ошибка обработки сообщения:', error);
 		return false;
 	}
 }
 
-module.exports = { processTelegramImages };
+module.exports = { processTelegramImages, getFileId };

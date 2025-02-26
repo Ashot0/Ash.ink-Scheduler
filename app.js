@@ -1,5 +1,6 @@
+const { Telegraf } = require('telegraf');
 const startServer = require('./server/server');
-const { initDb } = require('./services/db');
+const { initDb, addMessageToDb } = require('./services/db');
 const {
 	processPinsFromSpecificBoard,
 	processPinsFromAllBoards,
@@ -10,6 +11,9 @@ const {
 	refreshPinterestToken,
 } = require('./services/testToken');
 const config = require('./config');
+const { getFileId } = require('./services/processTelegramImages');
+
+const bot = new Telegraf(config.telegram.token);
 
 async function startApp() {
 	try {
@@ -19,6 +23,8 @@ async function startApp() {
 		(async () => {
 			await initDb();
 			startServer(); // Запускаем сервер после успешного подключения к БД
+
+			bot.launch();
 		})();
 
 		console.log('Верификация Pinterest токена...');
@@ -51,3 +57,27 @@ async function startApp() {
 
 startApp();
 module.exports = startApp;
+
+bot.on('message', async (ctx) => {
+	try {
+		const { message } = ctx;
+		if (message.chat.type === 'private') {
+			const fileId = getFileId(message); // Получаем file_id, если есть медиа
+			const caption = message.caption || message.text || ''; // Убедимся, что caption не undefined
+
+			await addMessageToDb(
+				{
+					chatId: message.chat.id,
+					messageId: message.message_id,
+					fileId: fileId,
+					caption: caption,
+				},
+				config.mongoDB.bd2
+			);
+
+			console.log(`Сообщение добавлено в базу данных`);
+		}
+	} catch (error) {
+		console.error('Ошибка обработки входящих сообщений:', error);
+	}
+});
